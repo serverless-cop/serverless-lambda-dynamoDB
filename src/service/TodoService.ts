@@ -70,7 +70,7 @@ export class TodoService {
             .delete({
                 TableName: this.props.table,
                 Key: {
-                    HashKey: params.id
+                    id: params.id
                 },
             }).promise()
     }

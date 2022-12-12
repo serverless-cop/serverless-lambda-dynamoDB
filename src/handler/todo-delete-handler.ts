@@ -26,6 +26,7 @@ export async function handler(event: APIGatewayProxyEvent, context: Context):
         })
         result.body = JSON.stringify(todo)
     } catch (error) {
+        console.error(error.message)
         result.statusCode = 500
         result.body = error.message
     }
