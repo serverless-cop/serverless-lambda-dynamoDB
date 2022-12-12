@@ -8,5 +8,5 @@ const app = new cdk.App();
 
 const statefulStack = new TodoAppStatefulStack(app, 'TodoStatefulStack')
 new TodoAppStack(app, 'TodoApiStack', {
-
+    todoAppStatefulStack: statefulStack
 });

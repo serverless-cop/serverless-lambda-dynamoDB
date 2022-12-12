@@ -10,8 +10,8 @@ export class TodoAppStatefulStack extends Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
-        this.todoTable = new GenericDynamoTable(scope, 'todo', {
-            tableName: 'TODO',
+        this.todoTable = new GenericDynamoTable(this, 'TodoDynamoDBTable', {
+            tableName: 'Todo',
             primaryKey: 'id'
         })
     }

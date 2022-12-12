@@ -2,6 +2,7 @@ import {Stack, StackProps} from "aws-cdk-lib";
 import {AttributeType, Table} from "aws-cdk-lib/aws-dynamodb";
 import {Effect, IGrantable, PolicyStatement} from "aws-cdk-lib/aws-iam";
 import {Construct} from "constructs";
+import config from "../../config/config";
 
 export interface GenericTableProps {
     tableName: string
@@ -24,7 +25,7 @@ export class GenericDynamoTable extends Construct {
                 name: this.props.primaryKey,
                 type: AttributeType.STRING
             },
-            tableName: this.props.tableName
+            tableName: config.account + '-' + config.env + '-' + this.props.tableName
         })
     }
 
