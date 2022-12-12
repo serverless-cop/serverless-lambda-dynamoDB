@@ -2,8 +2,7 @@ import {Construct} from "constructs";
 import {GenericDynamoTable} from "../generic/GenericDynamoTable";
 import {GenericApi} from "../generic/GenericApi";
 import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
-const apigateway = require("@aws-cdk/aws-apigateway");
-import {JsonSchemaType, RestApi} from "aws-cdk-lib/aws-apigateway";
+import {createTodoSchema, editTodoSchema} from "./todo-schema";
 
 export interface TodoApiProps {
     todoTable: GenericDynamoTable
@@ -11,6 +10,7 @@ export interface TodoApiProps {
 
 export class TodoApis extends GenericApi {
     private props: TodoApiProps
+    private listApi: NodejsFunction
     private getApi: NodejsFunction
     private createApi: NodejsFunction
     private editApi: NodejsFunction
@@ -21,6 +21,7 @@ export class TodoApis extends GenericApi {
         this.props = props
         this.addApis();
 
+        this.props.todoTable.table.grantFullAccess(this.listApi.grantPrincipal)
         this.props.todoTable.table.grantFullAccess(this.getApi.grantPrincipal)
         this.props.todoTable.table.grantFullAccess(this.createApi.grantPrincipal)
         this.props.todoTable.table.grantFullAccess(this.editApi.grantPrincipal)
@@ -28,8 +29,20 @@ export class TodoApis extends GenericApi {
     }
 
     private addApis(){
-        const todoApiResource = this.api.root.addResource('todo')
-        const todoIdResource = todoApiResource.addResource('{id}')
+        const todosApiResource = this.api.root.addResource('todos')
+        const todoIdResource = todosApiResource.addResource('{id}')
+
+        this.listApi = this.addMethod({
+            functionName: 'todo-list',
+            handlerName: 'todo-list-handler.ts',
+            verb: 'GET',
+            resource: todosApiResource,
+            environment: {
+                TODO_TABLE: this.props.todoTable.table.tableName
+            },
+            validateRequestBody: false,
+        })
+
         this.getApi = this.addMethod({
             functionName: 'todo-get',
             handlerName: 'todo-get-handler.ts',
@@ -38,74 +51,42 @@ export class TodoApis extends GenericApi {
             environment: {
                 TODO_TABLE: this.props.todoTable.table.tableName
             },
+            validateRequestBody: false,
         })
-
-        // const todoModel = new apigateway.Model(this, "model-validator", {
-        //     restApi: this.api,
-        //     contentType: "application/json",
-        //     description: "To validate the request body",
-        //     modelName: "todoModel",
-        //     schema: {
-        //         type: JsonSchemaType.OBJECT,
-        //         required: ["description"],
-        //         properties: {
-        //             description: { type: "string" },
-        //         },
-        //     },
-        // });
-
-        // const requestValidator = new apigateway.RequestValidator(
-        //     scope,
-        //     'body-validator',
-        //     {
-        //         restApi: api,
-        //         requestValidatorName: "body-validator",
-        //         validateRequestBody: true,
-        //     }
-        // )
 
         this.createApi = this.addMethod({
             functionName: 'todo-post',
             handlerName: 'todo-create-handler.ts',
             verb: 'POST',
-            resource: todoApiResource,
+            resource: todosApiResource,
             environment: {
                 TODO_TABLE: this.props.todoTable.table.tableName
             },
-            options: {
-                // requestValidator: new apigateway.RequestValidator(
-                //     scope,
-                //     "body-validator",
-                //     {
-                //         restApi: api,
-                //         requestValidatorName: "body-validator",
-                //         validateRequestBody: true,
-                //     }
-                // ),
-                // requestModels: {
-                //     "application/json": todoModel,
-                // },
-            }
+            validateRequestBody: true,
+            bodySchema: createTodoSchema
         })
 
         this.editApi = this.addMethod({
             functionName: 'todo-put',
             handlerName: 'todo-edit-handler.ts',
             verb: 'PUT',
-            resource: todoApiResource,
+            resource: todosApiResource,
             environment: {
                 TODO_TABLE: this.props.todoTable.table.tableName
-            }
+            },
+            validateRequestBody: true,
+            bodySchema: editTodoSchema
         })
 
         this.deleteApi = this.addMethod({
             functionName: 'todo-delete',
             handlerName: 'todo-delete-handler.ts',
             verb: 'DELETE',
-            resource: todoApiResource,
+            resource: todoIdResource,
             environment: {
                 TODO_TABLE: this.props.todoTable.table.tableName
-            }
+            },
+            validateRequestBody: false
         })
     }
 

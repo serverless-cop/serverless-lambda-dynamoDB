@@ -1,10 +1,13 @@
-interface TodoGetParams{
+export interface TodoGetParams{
     id: string
 }
-interface TodoEntity{
+export interface TodoEntity{
     id: string
     description: string
 }
-interface TodoCreateParams{
+export interface TodoCreateParams{
     description: string
 }
+
+export type TodoEditParams = TodoEntity
+export type TodoDeleteParams = TodoGetParams
